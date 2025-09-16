@@ -1,23 +1,21 @@
-import { Module, Global } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { initializeDatabase, getDatabase } from './db';
+import { initializeDatabase, Database } from './db';
 
-const DATABASE_CONNECTION = 'DATABASE_CONNECTION';
-
-@Global()
 @Module({
   providers: [
     {
-      provide: DATABASE_CONNECTION,
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const databaseUrl = configService.get<string>('database.url');
-        return initializeDatabase(databaseUrl!);
-      },
-    },
-    {
       provide: 'DATABASE',
-      useFactory: () => getDatabase(),
+      useFactory: async (configService: ConfigService): Promise<Database> => {
+        const databaseUrl = configService.get<string>('database.url');
+
+        if (!databaseUrl) {
+          throw new Error('DATABASE_URL is not configured');
+        }
+
+        return await initializeDatabase(databaseUrl);
+      },
+      inject: [ConfigService],
     },
   ],
   exports: ['DATABASE'],
