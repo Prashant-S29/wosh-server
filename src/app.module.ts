@@ -16,7 +16,8 @@ import { CommonModule } from './common/common.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig],
-      envFilePath: ['.env.local', '.env'],
+      envFilePath:
+        process.env.NODE_ENV === 'development' ? '.env.local' : '.env',
     }),
     ThrottlerModule.forRoot([
       {
