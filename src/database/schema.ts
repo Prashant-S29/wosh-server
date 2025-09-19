@@ -9,7 +9,6 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-// better auth
 export const user = pgTable('user', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
@@ -29,6 +28,7 @@ export const session = pgTable('session', {
   token: text('token').notNull().unique(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
+    .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
   ipAddress: text('ip_address'),
@@ -54,6 +54,7 @@ export const account = pgTable('account', {
   password: text('password'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
+    .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
 });
@@ -70,18 +71,22 @@ export const verification = pgTable('verification', {
     .notNull(),
 });
 
-// Your application tables
+// Organizations
 export const organizations = pgTable('organizations', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
   ownerId: uuid('owner_id')
     .notNull()
-    .references(() => user.id),
+    .references(() => user.id, { onDelete: 'cascade' }),
   publicKey: text('public_key').notNull(),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
 
+// Projects
 export const projects = pgTable('projects', {
   id: uuid('id').primaryKey().defaultRandom(),
   organizationId: uuid('organization_id')
@@ -89,10 +94,14 @@ export const projects = pgTable('projects', {
     .references(() => organizations.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 255 }).notNull(),
   wrappedSymmetricKey: text('wrapped_symmetric_key').notNull(),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
 
+// Secrets
 export const secrets = pgTable('secrets', {
   id: uuid('id').primaryKey().defaultRandom(),
   projectId: uuid('project_id')
@@ -103,10 +112,14 @@ export const secrets = pgTable('secrets', {
   nonce: text('nonce').notNull(),
   authTag: text('auth_tag').notNull(),
   metadata: jsonb('metadata'),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
 
+// Organization Members
 export const organizationMembers = pgTable('organization_members', {
   id: uuid('id').primaryKey().defaultRandom(),
   organizationId: uuid('organization_id')
@@ -116,10 +129,9 @@ export const organizationMembers = pgTable('organization_members', {
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
   role: varchar('role', { length: 50 }).notNull().default('member'),
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-// Relations
 export const userRelations = relations(user, ({ many }) => ({
   organizations: many(organizations),
   memberships: many(organizationMembers),

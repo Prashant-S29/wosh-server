@@ -10,6 +10,7 @@ import databaseConfig from './config/database.config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CommonModule } from './common/common.module';
+import { OrganizationModule } from './organization/organization.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { CommonModule } from './common/common.module';
     CommonModule,
     DatabaseModule,
     AuthModule,
+    OrganizationModule,
   ],
   controllers: [AppController],
   providers: [
