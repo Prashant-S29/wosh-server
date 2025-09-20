@@ -11,6 +11,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CommonModule } from './common/common.module';
 import { OrganizationModule } from './organization/organization.module';
+import { ProjectModule } from './project/project.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { OrganizationModule } from './organization/organization.module';
     DatabaseModule,
     AuthModule,
     OrganizationModule,
+    ProjectModule,
   ],
   controllers: [AppController],
   providers: [

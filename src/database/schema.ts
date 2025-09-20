@@ -79,6 +79,9 @@ export const organizations = pgTable('organizations', {
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
   publicKey: text('public_key').notNull(),
+  privateKeyEncrypted: text('private_key_encrypted').notNull(),
+  keyDerivationSalt: text('key_derivation_salt').notNull(),
+  encryptionIv: text('encryption_iv').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
     .defaultNow()

@@ -28,4 +28,28 @@ export class CreateOrganizationDto {
   @IsString()
   @IsNotEmpty()
   ownerId: string;
+
+  @ApiProperty({
+    example: 'private_key_encrypted',
+    description: 'The encrypted private key',
+  })
+  @IsString()
+  @IsNotEmpty()
+  privateKeyEncrypted: string;
+
+  @ApiProperty({
+    example: 'key_derivation_salt',
+    description: 'The salt used for key derivation',
+  })
+  @IsString()
+  @IsNotEmpty()
+  keyDerivationSalt: string;
+
+  @ApiProperty({
+    example: 'encryption_iv',
+    description: 'The initialization vector used for encryption',
+  })
+  @IsString()
+  @IsNotEmpty()
+  encryptionIv: string;
 }
