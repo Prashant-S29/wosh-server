@@ -31,7 +31,7 @@ export class AuthService {
   async signUp(signUpDto: SignUpDto) {
     try {
       const result = await this.auth.api.signUpEmail({
-        body: signUpDto,
+        body: { ...signUpDto },
         asResponse: true,
       });
 

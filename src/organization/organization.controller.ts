@@ -33,6 +33,13 @@ export class OrganizationController {
     return this.organizationService.findAll(ownerId, pageNumber, limitNumber);
   }
 
+  @Get('keys')
+  keys(@Query('ownerId') ownerId: string, @Query('orgId') orgId: string) {
+    console.log('orgId:', orgId);
+    console.log('ownerId:', ownerId);
+    return this.organizationService.keys(ownerId, orgId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.organizationService.findOne(id);

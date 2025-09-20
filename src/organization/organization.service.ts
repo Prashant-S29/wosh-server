@@ -1,10 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, count } from 'drizzle-orm';
+import { eq, count, and } from 'drizzle-orm';
 import { Database } from '../database/db';
 import { organizations } from '../database/schema';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
-import { NewOrganization } from 'src/database/database.types';
 
 @Injectable()
 export class OrganizationService {
@@ -13,7 +12,7 @@ export class OrganizationService {
   async create(dto: CreateOrganizationDto) {
     const [org] = await this.db
       .insert(organizations)
-      .values(dto as NewOrganization)
+      .values(dto)
       .returning({ id: organizations.id });
     return org;
   }
@@ -68,5 +67,21 @@ export class OrganizationService {
   async remove(id: string) {
     await this.db.delete(organizations).where(eq(organizations.id, id));
     return { deleted: true };
+  }
+
+  async keys(ownerId: string, orgId: string) {
+    const [orgKeys] = await this.db
+      .select({
+        privateKeyEncrypted: organizations.privateKeyEncrypted,
+        keyDerivationSalt: organizations.keyDerivationSalt,
+        encryptionIv: organizations.encryptionIv,
+        publicKey: organizations.publicKey,
+      })
+      .from(organizations)
+      .where(
+        and(eq(organizations.ownerId, ownerId), eq(organizations.id, orgId)),
+      );
+
+    return orgKeys;
   }
 }
