@@ -9,7 +9,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "dev": "dotenv -e .env.local -- cross-env NODE_ENV=development nest start --watch",
-    "start": "dotenv -e .env -- cross-env NODE_ENV=production nest start",
+    "start:prod": "dotenv -e .env -- cross-env NODE_ENV=production nest start",
     "db:reset": "dotenv -e .env.local -- cross-env NODE_ENV=development ts-node src/scripts/reset-db.ts && pnpm db:migrate:dev",
     "db:migrate:dev": "dotenv -e .env.local -- cross-env NODE_ENV=development drizzle-kit migrate",
     "db:migrate:prod": "dotenv -e .env -- cross-env NODE_ENV=production drizzle-kit migrate",
