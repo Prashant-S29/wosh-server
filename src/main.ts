@@ -2,18 +2,46 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/interceptors';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import * as compression from 'compression';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // global prefix
+  // Security & Performance middleware
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          imgSrc: ["'self'", 'data:', 'https:'],
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
+
+  app.use(
+    compression({
+      level: 6,
+      threshold: 100 * 1000,
+      filter: (req, res) => {
+        if (req.headers['x-no-compression']) return false;
+        return compression.filter(req, res);
+      },
+    }),
+  );
+
+  // Global prefix
   app.setGlobalPrefix('api');
 
-  // Global Filter
+  // Global Filters
   app.useGlobalFilters(new GlobalExceptionFilter());
 
-  // Global Interceptor
+  // Global Interceptors
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   // global pipe
@@ -22,6 +50,10 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      disableErrorMessages: process.env.NODE_ENV === 'production',
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
     }),
   );
 
@@ -35,4 +67,8 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
-void bootstrap();
+
+bootstrap().catch((error) => {
+  Logger.error('❌ Error starting server', error, 'Bootstrap');
+  process.exit(1);
+});
