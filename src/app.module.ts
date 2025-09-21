@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
 import { DatabaseModule } from './database/database.module';
@@ -12,6 +12,10 @@ import { AppService } from './app.service';
 import { CommonModule } from './common/common.module';
 import { OrganizationModule } from './organization/organization.module';
 import { ProjectModule } from './project/project.module';
+import { ErrorsModule } from './common/errors/errors.module';
+import { AuthGuard } from './auth/guards/auth.guard';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { ErrorService } from './common/errors/error.service';
 
 @Module({
   imports: [
@@ -43,12 +47,28 @@ import { ProjectModule } from './project/project.module';
     AuthModule,
     OrganizationModule,
     ProjectModule,
+    ErrorsModule,
   ],
   controllers: [AppController],
   providers: [
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useFactory: (errorService: ErrorService) => {
+        return new GlobalExceptionFilter(errorService);
+      },
+      inject: [ErrorService],
     },
     AppService,
   ],
