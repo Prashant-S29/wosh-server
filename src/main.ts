@@ -1,8 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ResponseInterceptor } from './common/interceptors';
-import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import * as compression from 'compression';
 import helmet from 'helmet';
 
@@ -37,25 +35,6 @@ async function bootstrap() {
 
   // Global prefix
   app.setGlobalPrefix('api');
-
-  // Global Filters
-  app.useGlobalFilters(new GlobalExceptionFilter());
-
-  // Global Interceptors
-  app.useGlobalInterceptors(new ResponseInterceptor());
-
-  // global pipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      disableErrorMessages: process.env.NODE_ENV === 'production',
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-    }),
-  );
 
   // cors
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];

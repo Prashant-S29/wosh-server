@@ -6,12 +6,15 @@ import {
   Req,
   HttpStatus,
   Logger,
+  HttpCode,
+  Res,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { Request } from 'express';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { SignInDto, SignUpDto } from './dto/auth.dto';
-import { ResponseService } from '../common/services/response.service';
+import { ErrorService } from 'src/common/errors/error.service';
+import { Protected } from 'src/common/decorators';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -20,117 +23,115 @@ export class AuthController {
 
   constructor(
     private readonly authService: AuthService,
-    private readonly response: ResponseService,
+    private readonly errorService: ErrorService,
   ) {}
 
   @Post('signin')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Sign in with email and password' })
-  async signIn(@Body() signInDto: SignInDto) {
-    const token = await this.authService.signIn(signInDto);
+  async signIn(@Body() signInDto: SignInDto, @Res() res: Response) {
+    const result = await this.authService.signIn(signInDto);
+    const statusCode = result.error ? result.error.statusCode : HttpStatus.OK;
 
-    if (!token) {
-      return this.response.error(
-        'SIGNIN_FAILED',
-        'Sign in failed',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    return this.response.success(
-      { token: token },
-      'Signed in successfully',
-      HttpStatus.OK,
-    );
+    return res.status(statusCode).json(result);
   }
 
   @Post('signup')
+  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Sign up with email and password' })
-  @ApiResponse({ status: 201, description: 'Successfully signed up' })
-  async signUp(@Body() signUpDto: SignUpDto) {
-    try {
-      const token = await this.authService.signUp(signUpDto);
+  async signUp(@Body() signUpDto: SignUpDto, @Res() res: Response) {
+    const result = await this.authService.signUp(signUpDto);
+    const statusCode = result.error
+      ? result.error.statusCode
+      : HttpStatus.CREATED;
 
-      if (!token) {
-        return this.response.error(
-          'SIGNUP_FAILED',
-          'Sign up failed',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      return this.response.success(
-        { token: token },
-        'Signed up successfully',
-        HttpStatus.CREATED,
-      );
-    } catch (error) {
-      this.logger.error('Sign up controller error:', error);
-      return this.response.error(
-        'SIGNUP_FAILED',
-        'Sign up failed',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    return res.status(statusCode).json(result);
   }
 
   @Get('session')
+  @HttpCode(HttpStatus.OK)
+  @Protected()
   @ApiOperation({ summary: 'Get current session' })
-  async getSession(@Req() req: Request) {
+  async getSession(@Req() req: Request, @Res() res: Response) {
     const authorization = req.headers.authorization;
-    if (!authorization?.startsWith('Bearer ')) {
-      return this.response.success(
-        { session: null },
-        'No session found',
-        HttpStatus.OK,
-      );
+
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+      return res.status(HttpStatus.OK).json({
+        data: { session: null },
+        error: null,
+        message: 'No session found',
+      });
     }
 
-    const token = authorization.replace('Bearer ', '');
-    const session = await this.authService.getSession(token);
+    const token = this.extractTokenFromHeader(authorization);
 
-    if (!session) {
-      return this.response.success(
-        { session: null },
-        'Session expired or invalid',
-        HttpStatus.OK,
-      );
+    if (!token) {
+      const errorDef = this.errorService.getErrorByCode('TOKEN_MISSING');
+      return res.status(errorDef?.statusCode || HttpStatus.BAD_REQUEST).json({
+        data: null,
+        error: errorDef || {
+          code: 'TOKEN_MISSING',
+          message: 'Authentication token is required',
+          statusCode: 400,
+        },
+        message: 'Invalid token format',
+      });
     }
 
-    return this.response.success(
-      { ...session },
-      'Session fetched successfully',
-      HttpStatus.OK,
-    );
+    const result = await this.authService.getSession(token);
+    const statusCode = result.error ? result.error.statusCode : HttpStatus.OK;
+
+    return res.status(statusCode).json(result);
   }
 
   @Post('signout')
+  @HttpCode(HttpStatus.OK)
+  @Protected()
   @ApiOperation({ summary: 'Sign out current user' })
-  async signOut(@Req() req: Request) {
+  async signOut(@Req() req: Request, @Res() res: Response) {
     const authorization = req.headers.authorization;
-    if (!authorization?.startsWith('Bearer ')) {
-      return this.response.error(
-        'SIGNOUT_FAILED',
-        'Missing token',
-        HttpStatus.BAD_REQUEST,
-      );
+
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+      const errorDef = this.errorService.getErrorByCode('TOKEN_MISSING');
+      return res.status(errorDef?.statusCode || HttpStatus.BAD_REQUEST).json({
+        data: null,
+        error: errorDef || {
+          code: 'TOKEN_MISSING',
+          message: 'Authentication token is required',
+          statusCode: 400,
+        },
+        message: 'Authorization token is required',
+      });
     }
 
-    const token = authorization.replace('Bearer ', '');
+    const token = this.extractTokenFromHeader(authorization);
+
+    if (!token) {
+      const errorDef = this.errorService.getErrorByCode('TOKEN_MISSING');
+      return res.status(errorDef?.statusCode || HttpStatus.BAD_REQUEST).json({
+        data: null,
+        error: errorDef || {
+          code: 'TOKEN_MISSING',
+          message: 'Authentication token is required',
+          statusCode: 400,
+        },
+        message: 'Invalid token format',
+      });
+    }
 
     const result = await this.authService.signOut(token);
+    const statusCode = result.error ? result.error.statusCode : HttpStatus.OK;
 
-    if (!result) {
-      return this.response.error(
-        'SIGNOUT_FAILED',
-        'Sign out failed',
-        HttpStatus.BAD_REQUEST,
-      );
+    return res.status(statusCode).json(result);
+  }
+
+  private extractTokenFromHeader(authorization: string): string | null {
+    try {
+      const token = authorization.replace('Bearer ', '').trim();
+      return token || null;
+    } catch (error) {
+      this.logger.error('Error extracting token from header:', error);
+      return null;
     }
-
-    return this.response.success(
-      { success: true },
-      'Signed out successfully',
-      HttpStatus.OK,
-    );
   }
 }

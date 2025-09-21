@@ -3,9 +3,10 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { CommonModule } from 'src/common/common.module';
 import { DatabaseModule } from 'src/database/database.module';
+import { ErrorsModule } from 'src/common/errors/errors.module';
 
 @Module({
-  imports: [CommonModule, DatabaseModule],
+  imports: [CommonModule, DatabaseModule, ErrorsModule],
   controllers: [AuthController],
   providers: [AuthService],
   exports: [AuthService],
