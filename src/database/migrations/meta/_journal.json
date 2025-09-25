@@ -22,6 +22,20 @@
       "when": 1758312934932,
       "tag": "0002_unusual_champions",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1758564516326,
+      "tag": "0003_add_mkdf_on_organization_keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1758597379305,
+      "tag": "0004_add_salts_form_mkdf_reconstruction",
+      "breakpoints": true
     }
   ]
 }
