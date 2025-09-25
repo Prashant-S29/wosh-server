@@ -84,6 +84,11 @@ export const ALL_ERRORS = {
       message: 'Organization member limit exceeded',
       statusCode: 402,
     },
+    {
+      code: 'DEVICE_NOT_FOUND',
+      message: 'Device registration not found',
+      statusCode: 404,
+    },
   ],
   PROJECT: [
     {
@@ -190,6 +195,11 @@ export const ALL_ERRORS = {
       code: 'UNKNOWN_ERROR',
       message: 'Unknown error occurred',
       statusCode: 500,
+    },
+    {
+      code: 'FORBIDDEN',
+      message: 'Forbidden',
+      statusCode: 403,
     },
   ],
 } as const;
