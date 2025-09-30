@@ -184,10 +184,74 @@ export class ProjectController {
 
     const result = await this.projectService.findOne({
       id,
-      organizationId,
     });
     const statusCode = result.error ? result.error.statusCode : HttpStatus.OK;
 
+    return res.status(statusCode).json(result);
+  }
+
+  @Get('keys')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get project wrapped keys',
+    description: 'Returns project wrapped keys',
+  })
+  async keys(
+    @Query('orgId') orgId: string,
+    @Query('projectId') projectId: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    if (!projectId) {
+      const errorDef = this.errorService.getErrorByCode('VALIDATION_ERROR');
+      return res.status(errorDef?.statusCode || HttpStatus.BAD_REQUEST).json({
+        data: null,
+        error: errorDef || {
+          code: 'VALIDATION_ERROR',
+          message: 'Project ID is required',
+          statusCode: 400,
+        },
+        message: 'Project ID is required',
+      });
+    }
+
+    const authCookie = req.headers.authorization;
+
+    const session = await this.authService.getSessionFromAuthCookie(authCookie);
+    if (!session.data) {
+      return res
+        .status(session.error?.statusCode || HttpStatus.UNAUTHORIZED)
+        .json({
+          data: null,
+          error: session.error,
+          message: 'Session not found or expired',
+        });
+    }
+
+    // Verify user has access to the organization
+    const orgAccess = await this.organizationService.hasAccess({
+      ownerId: session.data.session.userId,
+      organizationId: orgId,
+    });
+
+    if (!orgAccess) {
+      const errorDef = this.errorService.getErrorByCode('ORG_NOT_FOUND');
+      return res.status(errorDef?.statusCode || HttpStatus.FORBIDDEN).json({
+        data: null,
+        error: errorDef || {
+          code: 'ORG_NOT_FOUND',
+          message: 'Organization not found or access denied',
+          statusCode: 403,
+        },
+        message: 'You do not have access to this organization',
+      });
+    }
+
+    const result = await this.projectService.keys({
+      projectId,
+    });
+
+    const statusCode = result.error ? result.error.statusCode : HttpStatus.OK;
     return res.status(statusCode).json(result);
   }
 

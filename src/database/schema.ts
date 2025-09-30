@@ -169,9 +169,9 @@ export const secrets = pgTable('secrets', {
     .notNull()
     .references(() => projects.id, { onDelete: 'cascade' }),
   keyName: varchar('key_name', { length: 255 }).notNull(),
-  ciphertext: text('ciphertext').notNull(),
-  nonce: text('nonce').notNull(),
-  authTag: text('auth_tag').notNull(),
+  note: text('note'),
+  ciphertext: text('ciphertext'),
+  nonce: text('nonce'),
   metadata: jsonb('metadata'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')

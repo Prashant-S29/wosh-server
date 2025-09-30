@@ -16,6 +16,7 @@ import { ErrorsModule } from './common/errors/errors.module';
 import { AuthGuard } from './auth/guards/auth.guard';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ErrorService } from './common/errors/error.service';
+import { SecretModule } from './secret/secret.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { ErrorService } from './common/errors/error.service';
     OrganizationModule,
     ProjectModule,
     ErrorsModule,
+    SecretModule,
   ],
   controllers: [AppController],
   providers: [

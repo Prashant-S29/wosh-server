@@ -105,20 +105,12 @@ export class ProjectService {
     }
   }
 
-  async findOne({
-    id,
-    organizationId,
-  }: {
-    id: string;
-    organizationId: string;
-  }) {
+  async findOne({ id }: { id: string }) {
     try {
       const [project] = await this.database
         .select()
         .from(projects)
-        .where(
-          and(eq(projects.id, id), eq(projects.organizationId, organizationId)),
-        );
+        .where(and(eq(projects.id, id)));
 
       if (!project) {
         return {
@@ -140,6 +132,39 @@ export class ProjectService {
         data: null,
         error: errorDef,
         message: 'Something went wrong while retrieving project',
+      };
+    }
+  }
+
+  async keys({ projectId }: { projectId: string }) {
+    try {
+      const [project] = await this.database
+        .select({
+          wrappedSymmetricKey: projects.wrappedSymmetricKey,
+        })
+        .from(projects)
+        .where(eq(projects.id, projectId));
+
+      if (!project) {
+        return {
+          data: null,
+          error: this.errorService.getErrorByCode('PROJECT_NOT_FOUND'),
+          message: 'Project not found or you do not have access to its keys',
+        };
+      }
+
+      return {
+        data: project,
+        error: null,
+        message: 'Project keys retrieved successfully',
+      };
+    } catch (error) {
+      this.logger.error(`Error retrieving keys for project:`, error);
+      const errorDef = this.errorService.getErrorByCode('INTERNAL_ERROR');
+      return {
+        data: null,
+        error: errorDef,
+        message: 'Something went wrong while retrieving project keys',
       };
     }
   }

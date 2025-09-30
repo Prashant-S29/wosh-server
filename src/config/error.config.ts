@@ -112,6 +112,13 @@ export const ALL_ERRORS = {
       statusCode: 409,
     },
   ],
+  SECRET: [
+    {
+      code: 'SECRET_NOT_FOUND',
+      message: 'Secret not found',
+      statusCode: 404,
+    },
+  ],
   SERVER: [
     {
       code: 'INTERNAL_ERROR',
