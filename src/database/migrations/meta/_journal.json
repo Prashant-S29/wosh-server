@@ -36,6 +36,20 @@
       "when": 1758597379305,
       "tag": "0004_add_salts_form_mkdf_reconstruction",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1758888603570,
+      "tag": "0005_dropped_auth_tag_and_add_note_in_secrets_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1759129776734,
+      "tag": "0006_allowing_empty_secrets",
+      "breakpoints": true
     }
   ]
 }
