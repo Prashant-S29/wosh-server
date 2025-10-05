@@ -123,7 +123,7 @@ export class SecretService {
         .where(whereConditions)
         .limit(limit)
         .offset(offset)
-        .orderBy(secrets.createdAt);
+        .orderBy(secrets.updatedAt);
 
       const result = await this.database
         .select({ count: count() })
@@ -265,7 +265,8 @@ export class SecretService {
 
       const deletedRows = await this.database
         .delete(secrets)
-        .where(and(eq(secrets.id, id), eq(secrets.projectId, projectId)));
+        .where(and(eq(secrets.id, id), eq(secrets.projectId, projectId)))
+        .returning({ id: secrets.id });
 
       if (deletedRows.length === 0) {
         return {
