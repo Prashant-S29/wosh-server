@@ -301,7 +301,8 @@ export class OrganizationService {
           .delete(organizations)
           .where(
             and(eq(organizations.id, id), eq(organizations.ownerId, ownerId)),
-          );
+          )
+          .returning({ id: organizations.id });
 
         if (deletedRows.length === 0) {
           return {
