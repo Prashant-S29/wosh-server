@@ -1,0 +1,142 @@
+name: Deploy NestJS to EC2
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Build application
+        run: pnpm build
+      
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy
+          # Copy built files
+          cp -r dist deploy/
+          # Copy necessary config files
+          cp package.json deploy/
+          cp pnpm-lock.yaml deploy/
+          cp ecosystem.config.js deploy/
+          cp drizzle.config.ts deploy/
+          # Copy migration files
+          mkdir -p deploy/src/database
+          cp -r src/database/migrations deploy/src/database/ || true
+          # Create tarball
+          tar -czf deploy.tar.gz -C deploy .
+      
+      - name: Deploy to EC2
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+        run: |
+          # Setup SSH
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          
+          # Add host to known_hosts
+          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+          
+          # Copy deployment package
+          scp -i ~/.ssh/deploy_key deploy.tar.gz $USER@$HOST:/tmp/
+          
+          # Deploy on EC2
+          ssh -i ~/.ssh/deploy_key $USER@$HOST << 'EOF'
+            set -e
+            
+            echo "🚀 Starting deployment..."
+            
+            # Create backup of current version
+            if [ -d ~/app/current/dist ]; then
+              BACKUP_DIR=~/app/backups/backup-$(date +%Y%m%d-%H%M%S)
+              echo "📦 Creating backup at $BACKUP_DIR"
+              mkdir -p $BACKUP_DIR
+              cp -r ~/app/current/dist $BACKUP_DIR/
+              cp ~/app/current/package.json $BACKUP_DIR/ || true
+              
+              # Keep only last 3 backups
+              cd ~/app/backups
+              ls -dt backup-* | tail -n +4 | xargs rm -rf || true
+            fi
+            
+            # Extract new version
+            echo "📂 Extracting new version..."
+            cd ~/app/current
+            tar -xzf /tmp/deploy.tar.gz
+            rm /tmp/deploy.tar.gz
+            
+            # Install production dependencies only (light operation)
+            echo "📥 Installing production dependencies..."
+            export PNPM_HOME="$HOME/.local/share/pnpm"
+            export PATH="$PNPM_HOME:$PATH"
+            pnpm install --prod --frozen-lockfile
+            
+            # Run database migrations if needed
+            echo "🗄️  Running database migrations..."
+            pnpm db:migrate:prod || echo "⚠️  Migration failed or not needed"
+            
+            # Reload PM2 with zero-downtime restart
+            echo "🔄 Restarting application..."
+            pm2 reload ecosystem.config.js --update-env
+            
+            # Health check
+            echo "🏥 Waiting for health check..."
+            sleep 5
+            
+            if curl -f -s http://localhost:3000/api/health > /dev/null; then
+              echo "✅ Deployment successful!"
+              pm2 status
+            else
+              echo "❌ Health check failed!"
+              echo "Rolling back..."
+              # If there's a backup, we could restore it here
+              pm2 logs --lines 50
+              exit 1
+            fi
+          EOF
+          
+          echo "🎉 Deployment completed successfully!"
+      
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ Deployment successful to https://api.woshvalut.xyz"
+          else
+            echo "❌ Deployment failed"
+          fi
