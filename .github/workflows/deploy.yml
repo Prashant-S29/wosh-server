@@ -64,14 +64,21 @@ jobs:
         run: |
           # Setup SSH
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          # Use printf to preserve exact formatting including newlines
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           
+          # Verify key format
+          ssh-keygen -l -f ~/.ssh/deploy_key || echo "Warning: Key format check failed"
+          
           # Add host to known_hosts
-          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts 2>/dev/null
+          
+          # Test SSH connection first
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $USER@$HOST "echo 'SSH connection successful'"
           
           # Copy deployment package
-          scp -i ~/.ssh/deploy_key deploy.tar.gz $USER@$HOST:/tmp/
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no deploy.tar.gz $USER@$HOST:/tmp/
           
           # Deploy on EC2
           ssh -i ~/.ssh/deploy_key $USER@$HOST << 'EOF'
