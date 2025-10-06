@@ -101,14 +101,10 @@ jobs:
             # Install production dependencies only (light operation)
             echo "📥 Installing production dependencies..."
             
-            # Ensure pnpm is available
-            if ! command -v pnpm &> /dev/null; then
-              echo "Installing pnpm..."
-              npm install -g pnpm@10.11.0
-            fi
+            # Ensure nvm and pnpm are in PATH
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             
-            export PNPM_HOME="$HOME/.local/share/pnpm"
-            export PATH="$PNPM_HOME:$PATH:/usr/local/bin"
             pnpm install --prod --frozen-lockfile
             
             # Run database migrations if needed
