@@ -1,4 +1,3 @@
-// organization.service.ts
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { eq, count, and, desc } from 'drizzle-orm';
 import { Database } from '../database/db';
@@ -6,6 +5,7 @@ import {
   organizations,
   deviceRegistrations,
   recoveryBackups,
+  projects,
 } from '../database/schema';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
@@ -98,6 +98,7 @@ export class OrganizationService {
     });
   }
 
+  // return id, name, totalProjects, createdAt
   async findAll({
     ownerId,
     page,
@@ -119,12 +120,13 @@ export class OrganizationService {
         .select({
           id: organizations.id,
           name: organizations.name,
-          requiredFactors: organizations.requiredFactors,
           createdAt: organizations.createdAt,
-          updatedAt: organizations.updatedAt,
+          totalProjects: count(projects.id).as('total_projects'),
         })
         .from(organizations)
+        .leftJoin(projects, eq(projects.organizationId, organizations.id))
         .where(eq(organizations.ownerId, ownerId))
+        .groupBy(organizations.id)
         .limit(limit)
         .offset(offset)
         .orderBy(desc(organizations.createdAt));
