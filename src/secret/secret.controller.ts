@@ -74,7 +74,7 @@ export class SecretController {
     }
 
     // Get project to verify organization access
-    const projectResult = await this.projectService.findOne({
+    const projectResult = await this.projectService.findOneById({
       id: projectId,
     });
 
