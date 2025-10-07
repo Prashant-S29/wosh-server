@@ -108,7 +108,12 @@ export class ProjectService {
   async findOne({ id }: { id: string }) {
     try {
       const [project] = await this.database
-        .select()
+        .select({
+          id: projects.id,
+          organizationId: projects.organizationId,
+          name: projects.name,
+          createdAt: projects.createdAt,
+        })
         .from(projects)
         .where(and(eq(projects.id, id)));
 
@@ -195,15 +200,11 @@ export class ProjectService {
         };
       }
 
-      // Extract updatable fields from dto
-      const updateData = {
-        ...dto,
-        updatedAt: new Date(),
-      };
-
       const [updatedProject] = await this.database
         .update(projects)
-        .set(updateData)
+        .set({
+          name: dto.name,
+        })
         .where(eq(projects.id, id))
         .returning();
 
@@ -256,7 +257,8 @@ export class ProjectService {
         .delete(projects)
         .where(
           and(eq(projects.id, id), eq(projects.organizationId, organizationId)),
-        );
+        )
+        .returning({ id: projects.id });
 
       if (deletedRows.length === 0) {
         return {
