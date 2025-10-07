@@ -187,6 +187,7 @@ export class ProjectController {
 
     const result = await this.projectService.findOne({
       id,
+      organizationId: organizationId,
     });
     const statusCode = result.error ? result.error.statusCode : HttpStatus.OK;
 

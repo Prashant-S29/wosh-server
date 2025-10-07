@@ -105,7 +105,13 @@ export class ProjectService {
     }
   }
 
-  async findOne({ id }: { id: string }) {
+  async findOne({
+    id,
+    organizationId,
+  }: {
+    id: string;
+    organizationId: string;
+  }) {
     try {
       const [project] = await this.database
         .select({
@@ -115,7 +121,9 @@ export class ProjectService {
           createdAt: projects.createdAt,
         })
         .from(projects)
-        .where(and(eq(projects.id, id)));
+        .where(
+          and(eq(projects.id, id), eq(projects.organizationId, organizationId)),
+        );
 
       if (!project) {
         return {
