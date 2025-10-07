@@ -12,6 +12,7 @@ import {
   HttpStatus,
   Res,
   HttpCode,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request, Response } from 'express';
@@ -90,7 +91,8 @@ export class ProjectController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get all projects for an organization' })
   async findAll(
-    @Param('organizationId') organizationId: string,
+    @Param('organizationId', new ParseUUIDPipe({ version: '4' }))
+    organizationId: string,
     @Query('page') page = '1',
     @Query('limit') limit = '10',
     @Req() req: Request,
@@ -145,8 +147,9 @@ export class ProjectController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get project by ID' })
   async findOne(
-    @Param('organizationId') organizationId: string,
-    @Param('id') id: string,
+    @Param('organizationId', new ParseUUIDPipe({ version: '4' }))
+    organizationId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
@@ -197,24 +200,11 @@ export class ProjectController {
     description: 'Returns project wrapped keys',
   })
   async keys(
-    @Query('orgId') orgId: string,
-    @Query('projectId') projectId: string,
+    @Query('orgId', new ParseUUIDPipe({ version: '4' })) orgId: string,
+    @Query('projectId', new ParseUUIDPipe({ version: '4' })) projectId: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    if (!projectId) {
-      const errorDef = this.errorService.getErrorByCode('VALIDATION_ERROR');
-      return res.status(errorDef?.statusCode || HttpStatus.BAD_REQUEST).json({
-        data: null,
-        error: errorDef || {
-          code: 'VALIDATION_ERROR',
-          message: 'Project ID is required',
-          statusCode: 400,
-        },
-        message: 'Project ID is required',
-      });
-    }
-
     const authCookie = req.headers.authorization;
 
     const session = await this.authService.getSessionFromAuthCookie(authCookie);
@@ -259,8 +249,9 @@ export class ProjectController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update project' })
   async update(
-    @Param('organizationId') organizationId: string,
-    @Param('id') id: string,
+    @Param('organizationId', new ParseUUIDPipe({ version: '4' }))
+    organizationId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateProjectDto: UpdateProjectDto,
     @Req() req: Request,
     @Res() res: Response,
@@ -311,8 +302,9 @@ export class ProjectController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete project' })
   async remove(
-    @Param('organizationId') organizationId: string,
-    @Param('id') id: string,
+    @Param('organizationId', new ParseUUIDPipe({ version: '4' }))
+    organizationId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {

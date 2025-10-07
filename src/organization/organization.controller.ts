@@ -12,6 +12,7 @@ import {
   Res,
   HttpCode,
   Headers,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Request, Response } from 'express';
@@ -150,24 +151,11 @@ export class OrganizationController {
       'Returns organization encryption keys for MKDF reconstruction with device verification',
   })
   async keys(
-    @Query('orgId') orgId: string,
+    @Query('orgId', new ParseUUIDPipe({ version: '4' })) orgId: string,
     @Headers('user-agent') userAgent: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    if (!orgId) {
-      const errorDef = this.errorService.getErrorByCode('VALIDATION_ERROR');
-      return res.status(errorDef?.statusCode || HttpStatus.BAD_REQUEST).json({
-        data: null,
-        error: errorDef || {
-          code: 'VALIDATION_ERROR',
-          message: 'Organization ID is required',
-          statusCode: 400,
-        },
-        message: 'Organization ID is required',
-      });
-    }
-
     const authCookie = req.headers.authorization;
 
     const session = await this.authService.getSessionFromAuthCookie(authCookie);
@@ -204,7 +192,7 @@ export class OrganizationController {
     description: 'Returns list of devices registered for this organization',
   })
   async getDevices(
-    @Param('id') organizationId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) organizationId: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
@@ -237,8 +225,8 @@ export class OrganizationController {
     description: 'Revokes access for a specific device registration',
   })
   async revokeDevice(
-    @Param('id') organizationId: string,
-    @Param('deviceId') deviceId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) organizationId: string,
+    @Param('deviceId', new ParseUUIDPipe({ version: '4' })) deviceId: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
@@ -269,7 +257,7 @@ export class OrganizationController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get organization by ID' })
   async findOne(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
@@ -298,7 +286,7 @@ export class OrganizationController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update organization' })
   async update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateOrganizationDto: UpdateOrganizationDto,
     @Req() req: Request,
     @Res() res: Response,
@@ -330,7 +318,7 @@ export class OrganizationController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete organization' })
   async remove(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
