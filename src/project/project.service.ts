@@ -149,6 +149,42 @@ export class ProjectService {
     }
   }
 
+  async findOneById({ id }: { id: string }) {
+    try {
+      const [project] = await this.database
+        .select({
+          id: projects.id,
+          organizationId: projects.organizationId,
+          name: projects.name,
+          createdAt: projects.createdAt,
+        })
+        .from(projects)
+        .where(and(eq(projects.id, id)));
+
+      if (!project) {
+        return {
+          data: null,
+          error: this.errorService.getErrorByCode('PROJECT_NOT_FOUND'),
+          message: 'Project not found',
+        };
+      }
+
+      return {
+        data: project,
+        error: null,
+        message: 'Project found successfully',
+      };
+    } catch (error) {
+      this.logger.error(`Error finding project with id ${id}:`, error);
+      const errorDef = this.errorService.getErrorByCode('INTERNAL_ERROR');
+      return {
+        data: null,
+        error: errorDef,
+        message: 'Something went wrong while retrieving project',
+      };
+    }
+  }
+
   async keys({ projectId }: { projectId: string }) {
     try {
       const [project] = await this.database
