@@ -2,11 +2,12 @@ import { Resend } from 'resend';
 
 const apiKey = process.env.RESEND_API_KEY;
 
-if (!apiKey) {
-  throw new Error('RESEND_API_KEY environment variable is required');
-}
+let resend: Resend | null = null;
 
-export const resend = new Resend(process.env.RESEND_API_KEY);
+// Only initialize Resend if API key is provided
+if (apiKey) {
+  resend = new Resend(apiKey);
+}
 
 interface SendEmailProps {
   from: string;
@@ -16,6 +17,15 @@ interface SendEmailProps {
 }
 
 export const sendEmail = async (props: SendEmailProps) => {
+  if (!resend) {
+    console.log('Resend API key not configured');
+    return {
+      data: null,
+      error: 'RESEND_NOT_CONFIGURED',
+      message: 'Resend email service is not configured',
+    };
+  }
+
   const { data, error } = await resend.emails.send(props);
 
   if (error) {
