@@ -13,6 +13,16 @@ export interface ErrorDefinition {
 export const ALL_ERRORS = {
   AUTH: [
     {
+      code: 'INVALID_OTP',
+      message: 'Invalid OTP',
+      statusCode: 401,
+    },
+    {
+      code: 'OTP_EXPIRED',
+      message: 'OTP Expired',
+      statusCode: 401,
+    },
+    {
       code: 'INVALID_EMAIL_OR_PASSWORD',
       message: 'Invalid email or password',
       statusCode: 401,
@@ -61,6 +71,13 @@ export const ALL_ERRORS = {
       code: 'SESSION_EXPIRED',
       message: 'Session has expired',
       statusCode: 401,
+    },
+  ],
+  EMAIL: [
+    {
+      code: 'EMAIL_ERROR',
+      message: 'Unable to send email',
+      statusCode: 400,
     },
   ],
   ORGANIZATION: [
