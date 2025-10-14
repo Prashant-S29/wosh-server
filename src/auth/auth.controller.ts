@@ -12,7 +12,7 @@ import {
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
-import { SignInDto, SignUpDto } from './dto/auth.dto';
+import { ReqSignUpOtpDto, SignUpWithEmailOtpDto } from './dto/auth.dto';
 import { ErrorService } from 'src/common/errors/error.service';
 import { Protected } from 'src/common/decorators';
 
@@ -26,24 +26,30 @@ export class AuthController {
     private readonly errorService: ErrorService,
   ) {}
 
-  @Post('signin')
+  @Post('req-signup-otp')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Sign in with email and password' })
-  async signIn(@Body() signInDto: SignInDto, @Res() res: Response) {
-    const result = await this.authService.signIn(signInDto);
+  @ApiOperation({ summary: 'Request signup verification OTP' })
+  async sendVerificationOtp(
+    @Body() ReqSignUpOtpDto: ReqSignUpOtpDto,
+    @Res() res: Response,
+  ) {
+    const result = await this.authService.reqSignUpOtp(ReqSignUpOtpDto);
     const statusCode = result.error ? result.error.statusCode : HttpStatus.OK;
 
     return res.status(statusCode).json(result);
   }
 
-  @Post('signup')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Sign up with email and password' })
-  async signUp(@Body() signUpDto: SignUpDto, @Res() res: Response) {
-    const result = await this.authService.signUp(signUpDto);
-    const statusCode = result.error
-      ? result.error.statusCode
-      : HttpStatus.CREATED;
+  @Post('signup-with-email-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'SignUp with email and OTP' })
+  async signUpWithEmailOtp(
+    @Body() signUpWithEmailOtpDto: SignUpWithEmailOtpDto,
+    @Res() res: Response,
+  ) {
+    const result = await this.authService.signUpWithEmailOtp(
+      signUpWithEmailOtpDto,
+    );
+    const statusCode = result.error ? result.error.statusCode : HttpStatus.OK;
 
     return res.status(statusCode).json(result);
   }

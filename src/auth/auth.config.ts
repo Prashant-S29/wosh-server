@@ -4,7 +4,10 @@ import { randomUUID } from 'crypto';
 import { Database } from '../database/db';
 import { account, session, user, verification } from '../database/schema';
 
-import { bearer } from 'better-auth/plugins';
+import { bearer, emailOTP } from 'better-auth/plugins';
+
+import { sendEmail } from 'src/config/resend.config';
+import { SignInOtpTemplate } from 'src/common/emailTemplate';
 
 export const createAuthConfig = (database: Database) => {
   return betterAuth({
@@ -51,7 +54,38 @@ export const createAuthConfig = (database: Database) => {
         maxAge: 5 * 60,
       },
     },
-    plugins: [bearer()],
+    plugins: [
+      bearer(),
+      emailOTP({
+        async sendVerificationOTP({ email, otp, type }) {
+          console.log({
+            email,
+            otp,
+            type,
+          });
+          if (process.env.NODE_ENV === 'development') return;
+
+          if (type === 'sign-in') {
+            const sendEmailRes = await sendEmail({
+              from: 'Wosh <support@woshvalut.xyz>',
+              to: [email],
+              subject: 'Verify your email address',
+              html: SignInOtpTemplate({ email, otp }),
+            });
+
+            if (sendEmailRes.error) {
+              throw new Error(sendEmailRes.message, {
+                cause: 'RESEND_ERROR',
+              });
+            }
+          } else if (type === 'email-verification') {
+            // Send the OTP for email verification
+          } else {
+            // Send the OTP for password reset
+          }
+        },
+      }),
+    ],
 
     advanced: {
       database: {

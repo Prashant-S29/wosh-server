@@ -1,7 +1,7 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { createAuthConfig } from './auth.config';
 import { Database } from 'src/database/db';
-import { SignInDto, SignUpDto } from './dto/auth.dto';
+import { ReqSignUpOtpDto, SignUpWithEmailOtpDto } from './dto/auth.dto';
 import { ErrorService } from 'src/common/errors/error.service';
 import { APIError } from 'better-auth';
 import { AllErrorCodes } from 'src/config/error.config';
@@ -28,62 +28,67 @@ export class AuthService {
     this.auth = createAuthConfig(this.database);
   }
 
-  async signIn(signInDto: SignInDto) {
+  async reqSignUpOtp(reqSignUpOtpDtp: ReqSignUpOtpDto) {
     try {
-      const { headers } = await this.auth.api.signInEmail({
-        body: signInDto,
-        returnHeaders: true,
+      const sendVerificationOtpRes = await this.auth.api.sendVerificationOTP({
+        body: {
+          email: reqSignUpOtpDtp.email,
+          type: 'sign-in',
+        },
       });
 
-      const authToken = headers.get('set-auth-token');
-
-      if (!authToken) {
-        const errorDef = this.errorService.getErrorByCode('TOKEN_EXPIRED');
+      if (!sendVerificationOtpRes.success) {
         return {
-          data: null,
-          error: errorDef,
-          message: 'Authentication successful but token not received',
+          data: { success: false },
+          error: null,
+          message: 'Something went wrong during verification',
         };
       }
 
       return {
-        data: { token: authToken },
+        data: { success: true },
         error: null,
-        message: 'Successfully signed in',
+        message: 'Verification OTP sent successfully',
       };
     } catch (error) {
-      this.logger.error('Sign in error:', error);
-
+      this.logger.error('Send verification OTP error:', error);
       if (error instanceof APIError) {
         const errorCode = this.mapBetterAuthErrorToCode(error);
         const errorDef = this.errorService.getErrorByCode(errorCode);
 
         return {
-          data: null,
-          error: errorDef,
-          message: this.getErrorMessage(errorCode, 'signin'),
+          data: { success: false },
+          error: errorDef || {
+            code: errorCode,
+            message:
+              error.body?.message || error.message || 'Unable to send OTP',
+            statusCode: error.statusCode || 400,
+          },
+          message: this.getErrorMessage(errorCode, 'verification'),
         };
       }
-
+      const errorDef = this.errorService.getErrorByCode(
+        'INTERNAL_ERROR' as AllErrorCodes,
+      );
       return {
         data: null,
-        error: this.errorService.getErrorByCode('INTERNAL_ERROR'),
-        message: 'Something went wrong during sign in',
+        error: errorDef || {
+          code: 'INTERNAL_ERROR',
+          message: 'Internal server error',
+          statusCode: 500,
+        },
+        message: 'Something went wrong during verification',
       };
     }
   }
 
-  async signUp(
-    signUpDto: SignUpDto,
-  ): Promise<ServiceResponse<{ token: string }>> {
+  async signUpWithEmailOtp(signUpWithEmailOtpDto: SignUpWithEmailOtpDto) {
     try {
-      const { headers } = await this.auth.api.signUpEmail({
-        body: { ...signUpDto },
+      const { headers } = await this.auth.api.signInEmailOTP({
+        body: signUpWithEmailOtpDto,
         returnHeaders: true,
       });
-
       const authToken = headers.get('set-auth-token');
-
       if (!authToken) {
         const errorDef = this.errorService.getErrorByCode(
           'TOKEN_MISSING' as AllErrorCodes,
@@ -98,19 +103,18 @@ export class AuthService {
           message: 'Account created successfully but token not received',
         };
       }
-
       return {
         data: { token: authToken },
         error: null,
         message: 'Account created successfully',
       };
     } catch (error) {
-      this.logger.error('Sign up error:', error);
+      this.logger.error('Sign up with email otp error:', error);
 
       if (error instanceof APIError) {
+        this.logger.error('Sign up with email otp error:', error);
         const errorCode = this.mapBetterAuthErrorToCode(error);
         const errorDef = this.errorService.getErrorByCode(errorCode);
-
         return {
           data: null,
           error: errorDef || {
@@ -121,7 +125,6 @@ export class AuthService {
           message: this.getErrorMessage(errorCode, 'signup'),
         };
       }
-
       const errorDef = this.errorService.getErrorByCode(
         'INTERNAL_ERROR' as AllErrorCodes,
       );
@@ -282,6 +285,18 @@ export class AuthService {
     const errorMessage = error.body?.message || error.message || '';
 
     // Map specific Better Auth error codes
+    if (
+      errorCode === 'OTP_EXPIRED' ||
+      errorMessage.toLowerCase().includes('otp expired')
+    ) {
+      return 'OTP_EXPIRED' as AllErrorCodes;
+    }
+    if (
+      errorCode === 'INVALID_OTP' ||
+      errorMessage.toLowerCase().includes('invalid otp')
+    ) {
+      return 'INVALID_OTP' as AllErrorCodes;
+    }
     if (
       errorCode === 'INVALID_EMAIL_OR_PASSWORD' ||
       errorMessage.toLowerCase().includes('invalid password') ||
