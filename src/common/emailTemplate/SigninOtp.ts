@@ -131,7 +131,6 @@ export const SignInOtpTemplate = ({
 
             <div class="footer">
               <p>This is an automated message, please don't reply to this email.</p>
-              <p>© 2025 Wosh. All rights reserved.</p>
             </div>
           </div>
         </div>

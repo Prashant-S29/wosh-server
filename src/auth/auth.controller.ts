@@ -30,10 +30,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request signup verification OTP' })
   async sendVerificationOtp(
-    @Body() ReqSignUpOtpDto: ReqSignUpOtpDto,
+    @Body() reqSignUpOtpDto: ReqSignUpOtpDto,
     @Res() res: Response,
   ) {
-    const result = await this.authService.reqSignUpOtp(ReqSignUpOtpDto);
+    const result = await this.authService.reqSignUpOtp(reqSignUpOtpDto);
     const statusCode = result.error ? result.error.statusCode : HttpStatus.OK;
 
     return res.status(statusCode).json(result);

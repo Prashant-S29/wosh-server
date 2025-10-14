@@ -40,7 +40,11 @@ export class AuthService {
       if (!sendVerificationOtpRes.success) {
         return {
           data: { success: false },
-          error: null,
+          error: {
+            code: 'EMAIL_ERROR',
+            message: 'Unable to send email',
+            statusCode: 500,
+          },
           message: 'Something went wrong during verification',
         };
       }
@@ -112,7 +116,6 @@ export class AuthService {
       this.logger.error('Sign up with email otp error:', error);
 
       if (error instanceof APIError) {
-        this.logger.error('Sign up with email otp error:', error);
         const errorCode = this.mapBetterAuthErrorToCode(error);
         const errorDef = this.errorService.getErrorByCode(errorCode);
         return {

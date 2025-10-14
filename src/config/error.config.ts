@@ -73,6 +73,13 @@ export const ALL_ERRORS = {
       statusCode: 401,
     },
   ],
+  EMAIL: [
+    {
+      code: 'EMAIL_ERROR',
+      message: 'Unable to send email',
+      statusCode: 400,
+    },
+  ],
   ORGANIZATION: [
     {
       code: 'ORG_NOT_FOUND',
