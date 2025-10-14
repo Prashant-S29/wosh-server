@@ -1,13 +1,23 @@
 import { Resend } from 'resend';
 
-const apiKey = process.env.RESEND_API_KEY;
-
 let resend: Resend | null = null;
 
-// Only initialize Resend if API key is provided
-if (apiKey) {
+const getResendClient = (): Resend | null => {
+  if (resend !== null) {
+    return resend;
+  }
+
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    console.log('Resend API key not configured');
+    return null;
+  }
+
   resend = new Resend(apiKey);
-}
+  console.log('✅ Resend client initialized successfully');
+  return resend;
+};
 
 interface SendEmailProps {
   from: string;
@@ -17,7 +27,9 @@ interface SendEmailProps {
 }
 
 export const sendEmail = async (props: SendEmailProps) => {
-  if (!resend) {
+  const client = getResendClient();
+
+  if (!client) {
     console.log('Resend API key not configured');
     return {
       data: null,
@@ -26,7 +38,7 @@ export const sendEmail = async (props: SendEmailProps) => {
     };
   }
 
-  const { data, error } = await resend.emails.send(props);
+  const { data, error } = await client.emails.send(props);
 
   if (error) {
     console.log('Error sending email', error);
