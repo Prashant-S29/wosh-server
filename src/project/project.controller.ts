@@ -17,7 +17,11 @@ import {
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { ProjectService } from './project.service';
-import { CreateProjectDto } from './dto/create-project.dto';
+import {
+  CreateProjectDto,
+  DisableSecretSharingDto,
+  ShareSecretsDto,
+} from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Protected } from 'src/common/decorators';
 import { ErrorService } from 'src/common/errors/error.service';
@@ -243,6 +247,163 @@ export class ProjectController {
     });
 
     const statusCode = result.error ? result.error.statusCode : HttpStatus.OK;
+    return res.status(statusCode).json(result);
+  }
+
+  @Post(':organizationId/:id/share')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Share project secrets' })
+  async shareProjectSecrets(
+    @Param('organizationId', new ParseUUIDPipe({ version: '4' }))
+    organizationId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() shareSecretsDto: ShareSecretsDto,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const authCookie = req.headers.authorization;
+
+    const session = await this.authService.getSessionFromAuthCookie(authCookie);
+    if (!session.data) {
+      return res
+        .status(session.error?.statusCode || HttpStatus.UNAUTHORIZED)
+        .json({
+          data: null,
+          error: session.error,
+          message: 'Session not found or expired',
+        });
+    }
+
+    // Verify user has access to the organization
+    const orgAccess = await this.organizationService.hasAccess({
+      ownerId: session.data.session.userId,
+      organizationId,
+    });
+
+    if (!orgAccess) {
+      const errorDef = this.errorService.getErrorByCode('ORG_NOT_FOUND');
+      return res.status(errorDef?.statusCode || HttpStatus.FORBIDDEN).json({
+        data: null,
+        error: errorDef || {
+          code: 'ORG_NOT_FOUND',
+          message: 'Organization not found or access denied',
+          statusCode: 403,
+        },
+        message: 'You do not have access to this organization',
+      });
+    }
+
+    const result = await this.projectService.shareSecrets({
+      projectId: id,
+      ...shareSecretsDto,
+    });
+
+    const statusCode = result.error ? result.error.statusCode : HttpStatus.OK;
+
+    return res.status(statusCode).json(result);
+  }
+
+  @Post(':organizationId/:id/disable-secret-sharing')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Disable secret sharing for project' })
+  async disableSecretSharing(
+    @Param('organizationId', new ParseUUIDPipe({ version: '4' }))
+    organizationId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() disableSecretSharingDto: DisableSecretSharingDto,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const authCookie = req.headers.authorization;
+
+    const session = await this.authService.getSessionFromAuthCookie(authCookie);
+    if (!session.data) {
+      return res
+        .status(session.error?.statusCode || HttpStatus.UNAUTHORIZED)
+        .json({
+          data: null,
+          error: session.error,
+          message: 'Session not found or expired',
+        });
+    }
+
+    // Verify user has access to the organization
+    const orgAccess = await this.organizationService.hasAccess({
+      ownerId: session.data.session.userId,
+      organizationId,
+    });
+
+    if (!orgAccess) {
+      const errorDef = this.errorService.getErrorByCode('ORG_NOT_FOUND');
+      return res.status(errorDef?.statusCode || HttpStatus.FORBIDDEN).json({
+        data: null,
+        error: errorDef || {
+          code: 'ORG_NOT_FOUND',
+          message: 'Organization not found or access denied',
+          statusCode: 403,
+        },
+        message: 'You do not have access to this organization',
+      });
+    }
+
+    const result = await this.projectService.disableSecretSharing({
+      projectId: id,
+      secretSharingToken: disableSecretSharingDto.secretSharingToken,
+    });
+
+    const statusCode = result.error ? result.error.statusCode : HttpStatus.OK;
+
+    return res.status(statusCode).json(result);
+  }
+
+  @Get(':organizationId/:id/secret-sharing-code')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get secret sharing code' })
+  async getSecretSharingCode(
+    @Param('organizationId', new ParseUUIDPipe({ version: '4' }))
+    organizationId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const authCookie = req.headers.authorization;
+
+    const session = await this.authService.getSessionFromAuthCookie(authCookie);
+    if (!session.data) {
+      return res
+        .status(session.error?.statusCode || HttpStatus.UNAUTHORIZED)
+        .json({
+          data: null,
+          error: session.error,
+          message: 'Session not found or expired',
+        });
+    }
+
+    // Verify user has access to the organization
+    const orgAccess = await this.organizationService.hasAccess({
+      ownerId: session.data.session.userId,
+      organizationId,
+    });
+
+    if (!orgAccess) {
+      const errorDef = this.errorService.getErrorByCode('ORG_NOT_FOUND');
+      return res.status(errorDef?.statusCode || HttpStatus.FORBIDDEN).json({
+        data: null,
+        error: errorDef || {
+          code: 'ORG_NOT_FOUND',
+          message: 'Organization not found or access denied',
+          statusCode: 403,
+        },
+        message: 'You do not have access to this organization',
+      });
+    }
+
+    const result = await this.projectService.getSecretSharingCode({
+      projectId: id,
+    });
+
+    const statusCode = result.error ? result.error.statusCode : HttpStatus.OK;
+
     return res.status(statusCode).json(result);
   }
 

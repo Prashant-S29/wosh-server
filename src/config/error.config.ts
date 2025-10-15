@@ -79,6 +79,11 @@ export const ALL_ERRORS = {
       message: 'Unable to send email',
       statusCode: 400,
     },
+    {
+      code: 'RESEND_NOT_CONFIGURED',
+      message: 'Resend email service is not configured',
+      statusCode: 503,
+    },
   ],
   ORGANIZATION: [
     {
@@ -130,6 +135,11 @@ export const ALL_ERRORS = {
     },
   ],
   SECRET: [
+    {
+      code: 'INVALID_SECRET_SHARING_TOKEN',
+      message: 'Invalid secret sharing token',
+      statusCode: 401,
+    },
     {
       code: 'SECRET_NOT_FOUND',
       message: 'Secret not found',

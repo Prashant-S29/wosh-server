@@ -28,3 +28,31 @@ export class CreateProjectDto {
   @IsNotEmpty()
   organizationId: string;
 }
+
+export class ShareSecretsDto {
+  @ApiProperty({
+    example: 'secret-sharing-token',
+    description: 'The secret sharing token',
+  })
+  @IsString()
+  @IsNotEmpty()
+  secretSharingToken: string;
+
+  @ApiProperty({
+    example: 'secret-sharing-code',
+    description: 'The secret sharing code',
+  })
+  @IsString()
+  @IsNotEmpty()
+  secretSharingCode: string;
+}
+
+export class DisableSecretSharingDto {
+  @ApiProperty({
+    example: 'secret-sharing-token',
+    description: 'The secret sharing token',
+  })
+  @IsString()
+  @IsNotEmpty()
+  secretSharingToken: string;
+}

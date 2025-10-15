@@ -3,8 +3,24 @@ import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import * as compression from 'compression';
 import helmet from 'helmet';
+import { config } from 'dotenv';
+import { resolve } from 'path';
 
 async function bootstrap() {
+  // Explicitly load .env file before anything else
+  const isProduction = process.env.NODE_ENV === 'production';
+  const envFile = isProduction ? '.env' : '.env.local';
+  const envPath = resolve(__dirname, '../../', envFile);
+
+  config({ path: envPath });
+
+  // Log environment status
+  const logger = new Logger('Bootstrap');
+  logger.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.log(`📁 Loading env from: ${envPath}`);
+  logger.log(`✅ RESEND_API_KEY loaded: ${!!process.env.RESEND_API_KEY}`);
+  logger.log(`✅ DATABASE_URL loaded: ${!!process.env.DATABASE_URL}`);
+
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(
@@ -56,6 +72,9 @@ async function bootstrap() {
   });
 
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
+  logger.log(
+    `🚀 Application is running on: http://0.0.0.0:${process.env.PORT ?? 3000}`,
+  );
 }
 
 bootstrap().catch((error) => {
