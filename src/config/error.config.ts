@@ -131,6 +131,11 @@ export const ALL_ERRORS = {
   ],
   SECRET: [
     {
+      code: 'INVALID_SECRET_SHARING_TOKEN',
+      message: 'Invalid secret sharing token',
+      statusCode: 401,
+    },
+    {
       code: 'SECRET_NOT_FOUND',
       message: 'Secret not found',
       statusCode: 404,
