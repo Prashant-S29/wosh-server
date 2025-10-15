@@ -58,12 +58,14 @@ export const createAuthConfig = (database: Database) => {
       bearer(),
       emailOTP({
         async sendVerificationOTP({ email, otp, type }) {
-          console.log({
-            email,
-            otp,
-            type,
-          });
-          if (process.env.NODE_ENV === 'development') return;
+          if (process.env.NODE_ENV === 'development') {
+            console.log({
+              email,
+              otp,
+              type,
+            });
+            return;
+          }
 
           if (type === 'sign-in') {
             const sendEmailRes = await sendEmail({

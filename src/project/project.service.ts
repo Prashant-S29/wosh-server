@@ -218,6 +218,176 @@ export class ProjectService {
     }
   }
 
+  async shareSecrets({
+    projectId,
+    secretSharingToken,
+    secretSharingCode,
+  }: {
+    projectId: string;
+    secretSharingToken: string;
+    secretSharingCode: string;
+  }) {
+    try {
+      const [project] = await this.database
+        .select()
+        .from(projects)
+        .where(eq(projects.id, projectId));
+
+      if (!project) {
+        return {
+          data: null,
+          error: this.errorService.getErrorByCode('PROJECT_NOT_FOUND'),
+          message: 'Project not found or you do not have access to its keys',
+        };
+      }
+
+      // Update project with secret sharing token
+      const [updatedProject] = await this.database
+        .update(projects)
+        .set({
+          isSecretSharingEnabled: true,
+          secretSharingToken: secretSharingToken,
+          secretSharingCode: secretSharingCode,
+        })
+        .where(eq(projects.id, projectId))
+        .returning({
+          id: projects.id,
+        });
+
+      if (!updatedProject.id) {
+        return {
+          data: null,
+          error: this.errorService.getErrorByCode('UNKNOWN_ERROR'),
+          message: 'Unable to update project',
+        };
+      } else {
+        return {
+          data: updatedProject,
+          error: null,
+          message: 'Project updated successfully',
+        };
+      }
+    } catch (error) {
+      this.logger.error(`Error sharing secrets for project:`, error);
+      const errorDef = this.errorService.getErrorByCode('INTERNAL_ERROR');
+      return {
+        data: null,
+        error: errorDef,
+        message: 'Something went wrong while sharing project secrets',
+      };
+    }
+  }
+
+  async disableSecretSharing({
+    projectId,
+    secretSharingToken,
+  }: {
+    projectId: string;
+    secretSharingToken: string;
+  }) {
+    try {
+      const [project] = await this.database
+        .select()
+        .from(projects)
+        .where(eq(projects.id, projectId));
+
+      if (!project) {
+        return {
+          data: null,
+          error: this.errorService.getErrorByCode('PROJECT_NOT_FOUND'),
+          message: 'Project not found or you do not have access to its keys',
+        };
+      }
+
+      // Check if secret sharing token matches
+      if (project.secretSharingToken !== secretSharingToken) {
+        return {
+          data: null,
+          error: this.errorService.getErrorByCode(
+            'INVALID_SECRET_SHARING_TOKEN',
+          ),
+          message: 'Invalid secret sharing token',
+        };
+      }
+
+      // Update project with secret sharing token
+      const [updatedProject] = await this.database
+        .update(projects)
+        .set({
+          isSecretSharingEnabled: false,
+          secretSharingToken: null,
+          secretSharingCode: null,
+        })
+        .where(eq(projects.id, projectId))
+        .returning({
+          id: projects.id,
+        });
+
+      if (!updatedProject.id) {
+        return {
+          data: null,
+          error: this.errorService.getErrorByCode('UNKNOWN_ERROR'),
+          message: 'Unable to update project',
+        };
+      } else {
+        return {
+          data: updatedProject,
+          error: null,
+          message: 'Project updated successfully',
+        };
+      }
+    } catch (error) {
+      this.logger.error(`Error disabling secret sharing for project:`, error);
+      const errorDef = this.errorService.getErrorByCode('INTERNAL_ERROR');
+      return {
+        data: null,
+        error: errorDef,
+        message: 'Something went wrong while disabling project secret sharing',
+      };
+    }
+  }
+
+  async getSecretSharingCode({ projectId }: { projectId: string }) {
+    try {
+      const [project] = await this.database
+        .select({
+          secretSharingCode: projects.secretSharingCode,
+        })
+        .from(projects)
+        .where(eq(projects.id, projectId));
+
+      if (!project) {
+        return {
+          data: null,
+          error: this.errorService.getErrorByCode('PROJECT_NOT_FOUND'),
+          message: 'Project not found',
+        };
+      }
+
+      if (!project.secretSharingCode) {
+        return {
+          data: null,
+          error: this.errorService.getErrorByCode('PROJECT_NOT_FOUND'),
+          message: 'Project not found or you do not have access to its keys',
+        };
+      }
+
+      return {
+        data: project,
+        error: null,
+        message: 'Project secrets retrieved successfully',
+      };
+    } catch (error) {
+      this.logger.error(`Error retrieving secrets for project:`, error);
+      const errorDef = this.errorService.getErrorByCode('INTERNAL_ERROR');
+      return {
+        data: null,
+        error: errorDef,
+        message: 'Something went wrong while retrieving project secrets',
+      };
+    }
+  }
+
   async update({
     id,
     organizationId,

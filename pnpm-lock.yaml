@@ -38,9 +38,15 @@ importers:
       compression:
         specifier: ^1.8.1
         version: 1.8.1
+      cross-env:
+        specifier: ^10.1.0
+        version: 10.1.0
       dotenv:
         specifier: ^17.2.2
         version: 17.2.3
+      dotenv-cli:
+        specifier: ^10.0.0
+        version: 10.0.0
       drizzle-orm:
         specifier: ^0.44.5
         version: 0.44.6(@types/pg@8.15.5)(kysely@0.28.7)(pg@8.16.3)(postgres@3.4.7)
@@ -109,12 +115,6 @@ importers:
         specifier: ^6.0.2
         version: 6.0.3
       '@types/uuid':
-        specifier: ^10.0.0
-        version: 10.0.0
-      cross-env:
-        specifier: ^10.0.0
-        version: 10.1.0
-      dotenv-cli:
         specifier: ^10.0.0
         version: 10.0.0
       drizzle-kit:
@@ -2227,10 +2227,6 @@ packages:
 
   dotenv@16.4.7:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
-    engines: {node: '>=12'}
-
-  dotenv@16.6.1:
-    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
     engines: {node: '>=12'}
 
   dotenv@17.2.3:
@@ -6392,15 +6388,13 @@ snapshots:
 
   dotenv-expand@11.0.7:
     dependencies:
-      dotenv: 16.6.1
+      dotenv: 16.4.7
 
   dotenv-expand@12.0.1:
     dependencies:
       dotenv: 16.4.7
 
   dotenv@16.4.7: {}
-
-  dotenv@16.6.1: {}
 
   dotenv@17.2.3: {}
 

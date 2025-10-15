@@ -155,6 +155,11 @@ export const projects = pgTable('projects', {
     .references(() => organizations.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 255 }).notNull(),
   wrappedSymmetricKey: text('wrapped_symmetric_key').notNull(),
+  secretSharingToken: text('secret_sharing_token'),
+  secretSharingCode: text('secret_sharing_code'),
+  isSecretSharingEnabled: boolean('is_secret_sharing_enabled')
+    .default(false)
+    .notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
     .defaultNow()
