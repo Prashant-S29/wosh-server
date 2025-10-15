@@ -17,7 +17,11 @@ import {
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { ProjectService } from './project.service';
-import { CreateProjectDto, ShareSecretsDto } from './dto/create-project.dto';
+import {
+  CreateProjectDto,
+  DisableSecretSharingDto,
+  ShareSecretsDto,
+} from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Protected } from 'src/common/decorators';
 import { ErrorService } from 'src/common/errors/error.service';
@@ -306,7 +310,7 @@ export class ProjectController {
     @Param('organizationId', new ParseUUIDPipe({ version: '4' }))
     organizationId: string,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @Body() shareSecretsDto: ShareSecretsDto,
+    @Body() disableSecretSharingDto: DisableSecretSharingDto,
     @Req() req: Request,
     @Res() res: Response,
   ) {
@@ -344,7 +348,7 @@ export class ProjectController {
 
     const result = await this.projectService.disableSecretSharing({
       projectId: id,
-      ...shareSecretsDto,
+      secretSharingToken: disableSecretSharingDto.secretSharingToken,
     });
 
     const statusCode = result.error ? result.error.statusCode : HttpStatus.OK;

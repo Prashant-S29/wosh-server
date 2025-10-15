@@ -356,6 +356,14 @@ export class ProjectService {
         .from(projects)
         .where(eq(projects.id, projectId));
 
+      if (!project) {
+        return {
+          data: null,
+          error: this.errorService.getErrorByCode('PROJECT_NOT_FOUND'),
+          message: 'Project not found',
+        };
+      }
+
       if (!project.secretSharingCode) {
         return {
           data: null,

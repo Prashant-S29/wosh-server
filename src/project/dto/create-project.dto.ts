@@ -46,3 +46,13 @@ export class ShareSecretsDto {
   @IsNotEmpty()
   secretSharingCode: string;
 }
+
+export class DisableSecretSharingDto {
+  @ApiProperty({
+    example: 'secret-sharing-token',
+    description: 'The secret sharing token',
+  })
+  @IsString()
+  @IsNotEmpty()
+  secretSharingToken: string;
+}
