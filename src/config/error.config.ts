@@ -79,6 +79,11 @@ export const ALL_ERRORS = {
       message: 'Unable to send email',
       statusCode: 400,
     },
+    {
+      code: 'RESEND_NOT_CONFIGURED',
+      message: 'Resend email service is not configured',
+      statusCode: 503,
+    },
   ],
   ORGANIZATION: [
     {

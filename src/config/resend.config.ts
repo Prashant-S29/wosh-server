@@ -44,8 +44,12 @@ export const sendEmail = async (props: SendEmailProps) => {
     console.log('Error sending email', error);
     return {
       data: null,
-      error: error.name,
-      message: error.message,
+      error: {
+        code: 'RESEND_NOT_CONFIGURED',
+        message: 'Resend email service is not configured',
+        statusCode: 503,
+      },
+      message: 'Resend email service is not configured',
     };
   }
 
