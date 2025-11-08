@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import compression from 'compression';
+import * as compression from 'compression';
 import helmet from 'helmet';
 import { config } from 'dotenv';
 import { resolve } from 'path';
